@@ -36,7 +36,6 @@ class vgg16:
             mean = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32, shape=[1, 1, 1, 3], name='img_mean')
             self.images = self.imgs-mean
 
-
     def convlayers(self):
         self.parameters = []
 
@@ -259,6 +258,7 @@ class vgg16:
         for i, k in enumerate(keys):
             print(i, k, np.shape(weights[k]))
             sess.run(self.parameters[i].assign(weights[k]))
+
 
 if __name__ == '__main__':
     sess = tf.Session()
