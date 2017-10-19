@@ -2,3 +2,8 @@
 output/
 vgg16_weights.npz
 __pycache__/
+Images/
+.cache/
+Tests/.cache/
+Tests/Images/
+
