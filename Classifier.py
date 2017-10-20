@@ -6,6 +6,10 @@ import numpy as np
 import Paths
 from PIL import Image
 
+from tensorflow.python.framework.graph_util_impl import convert_variables_to_constants
+from tensorflow.python.platform import gfile
+
+
 # Classify a list of input images of any size
 class Classifier:
     def __init__(self):
@@ -14,6 +18,17 @@ class Classifier:
         self.sess = tf.Session()
         imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
         self.vgg = vgg16.vgg16(imgs, directory + '/pre_trained/vgg16_weights.npz', self.sess)
+
+        self.save_graph_to_file(self.sess, self.sess.graph, 'out/output_graph.pb')
+        with gfile.FastGFile('out/output_labels.txt', 'w') as f:
+            f.write('\n'.join(class_names) + '\n')
+
+    def save_graph_to_file(self, sess, graph, graph_file_name):
+        output_graph_def = convert_variables_to_constants(
+            sess, graph.as_graph_def(), ['final_tensor'])
+        with gfile.FastGFile(graph_file_name, 'wb') as f:
+            f.write(output_graph_def.SerializeToString())
+        return
 
     def classifier(self, images_in):
         images = self.resize_images(images_in)

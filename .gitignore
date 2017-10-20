@@ -1,5 +1,6 @@
 .idea/
 output/
+out/
 pre_trained/vgg16_weights.npz
 __pycache__/
 .cache/

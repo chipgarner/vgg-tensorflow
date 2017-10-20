@@ -28,7 +28,7 @@ class vgg16:
             self.convlayers()
             self.fc_layers()
 
-        self.probs = tf.nn.softmax(self.fc8l)
+        self.probs = tf.nn.softmax(self.fc8l, name='final_tensor')
         if weights is not None and sess is not None:
             self.load_weights_and_biases_npz(weights, sess)
 
