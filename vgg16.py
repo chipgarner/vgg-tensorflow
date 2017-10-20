@@ -11,10 +11,10 @@
 
 ########################################################################################
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from pre_trained.imagenet_classes import class_names
 from scipy.misc import imread, imresize
-from imagenet_classes import class_names
 
 
 class vgg16:
@@ -32,12 +32,11 @@ class vgg16:
         if weights is not None and sess is not None:
             self.load_weights_and_biases_npz(weights, sess)
 
-
     def preprocess(self):
         # zero-mean input
         with tf.name_scope('preprocess'):
             mean = tf.constant([123.68, 116.779, 103.939], dtype=tf.float32, shape=[1, 1, 1, 3], name='img_mean')
-            self.images = self.imgs-mean
+            self.images = self.imgs - mean
 
     def convlayers(self):
         self.parameters = []
@@ -66,10 +65,10 @@ class vgg16:
 
         # pool1
         self.pool1 = tf.nn.max_pool(self.conv1_2,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME',
-                               name='pool1')
+                                    ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1],
+                                    padding='SAME',
+                                    name='pool1')
 
         # conv2_1
         with tf.name_scope('conv2_1') as scope:
@@ -95,10 +94,10 @@ class vgg16:
 
         # pool2
         self.pool2 = tf.nn.max_pool(self.conv2_2,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME',
-                               name='pool2')
+                                    ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1],
+                                    padding='SAME',
+                                    name='pool2')
 
         # conv3_1
         with tf.name_scope('conv3_1') as scope:
@@ -135,10 +134,10 @@ class vgg16:
 
         # pool3
         self.pool3 = tf.nn.max_pool(self.conv3_3,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME',
-                               name='pool3')
+                                    ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1],
+                                    padding='SAME',
+                                    name='pool3')
 
         # conv4_1
         with tf.name_scope('conv4_1') as scope:
@@ -175,10 +174,10 @@ class vgg16:
 
         # pool4
         self.pool4 = tf.nn.max_pool(self.conv4_3,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME',
-                               name='pool4')
+                                    ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1],
+                                    padding='SAME',
+                                    name='pool4')
 
         # conv5_1
         with tf.name_scope('conv5_1') as scope:
@@ -215,20 +214,20 @@ class vgg16:
 
         # pool5
         self.pool5 = tf.nn.max_pool(self.conv5_3,
-                               ksize=[1, 2, 2, 1],
-                               strides=[1, 2, 2, 1],
-                               padding='SAME',
-                               name='pool4')
+                                    ksize=[1, 2, 2, 1],
+                                    strides=[1, 2, 2, 1],
+                                    padding='SAME',
+                                    name='pool4')
 
     def fc_layers(self):
         # fc6
         with tf.name_scope('fc6') as scope:
             shape = int(np.prod(self.pool5.get_shape()[1:]))
             fc6w = tf.Variable(tf.truncated_normal([shape, 4096],
-                                                         dtype=tf.float32,
-                                                         stddev=1e-1), name='weights')
+                                                   dtype=tf.float32,
+                                                   stddev=1e-1), name='weights')
             fc6b = tf.Variable(tf.constant(1.0, shape=[4096], dtype=tf.float32),
-                                 trainable=True, name='biases')
+                               trainable=True, name='biases')
             pool5_flat = tf.reshape(self.pool5, [-1, shape])
             fc6l = tf.nn.bias_add(tf.matmul(pool5_flat, fc6w), fc6b)
             self.fc6 = tf.nn.relu(fc6l)
@@ -237,10 +236,10 @@ class vgg16:
         # fc7
         with tf.name_scope('fc7') as scope:
             fc7w = tf.Variable(tf.truncated_normal([4096, 4096],
-                                                         dtype=tf.float32,
-                                                         stddev=1e-1), name='weights')
+                                                   dtype=tf.float32,
+                                                   stddev=1e-1), name='weights')
             fc7b = tf.Variable(tf.constant(1.0, shape=[4096], dtype=tf.float32),
-                                 trainable=True, name='biases')
+                               trainable=True, name='biases')
             fc7l = tf.nn.bias_add(tf.matmul(self.fc6, fc7w), fc7b)
             self.fc7 = tf.nn.relu(fc7l)
             self.parameters += [fc7w, fc7b]
@@ -248,10 +247,10 @@ class vgg16:
         # fc8
         with tf.name_scope('fc8') as scope:
             fc8w = tf.Variable(tf.truncated_normal([4096, 1000],
-                                                         dtype=tf.float32,
-                                                         stddev=1e-1), name='weights')
+                                                   dtype=tf.float32,
+                                                   stddev=1e-1), name='weights')
             fc8b = tf.Variable(tf.constant(1.0, shape=[1000], dtype=tf.float32),
-                                 trainable=True, name='biases')
+                               trainable=True, name='biases')
             self.fc8l = tf.nn.bias_add(tf.matmul(self.fc7, fc8w), fc8b)
             self.parameters += [fc8w, fc8b]
 
@@ -266,27 +265,17 @@ class vgg16:
 
 if __name__ == '__main__':
     import Paths
+
     directory = Paths.this_directory()
+
     sess = tf.Session()
     imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
-    vgg = vgg16(imgs, 'vgg16_weights.npz', sess)
-
-    img1 = imread(directory + '/Tests/Images/laska.png', mode='RGB')
-    img1 = imresize(img1, (224, 224))
+    vgg = vgg16(imgs, directory + '/pre_trained/vgg16_weights.npz', sess)
 
     img2 = imread(directory + '/Tests/Images/jet.jpg', mode='RGB')
     img2 = imresize(img2, (224, 224))
 
-    prob = sess.run(vgg.probs, feed_dict={vgg.imgs: [img1]})[0]
-    preds = (np.argsort(prob)[::-1])[0:1]
-    for p in preds:
-        print (class_names[p], prob[p])
-
     prob = sess.run(vgg.probs, feed_dict={vgg.imgs: [img2]})[0]
     preds = (np.argsort(prob)[::-1])[0:1]
     for p in preds:
-        print (class_names[p], prob[p])
-
-    writer = tf.summary.FileWriter("output", sess.graph)
-    writer.close()
-
+        print(class_names[p], prob[p])

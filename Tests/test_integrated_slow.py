@@ -5,12 +5,12 @@ import pytest
 import Paths
 
 
-def test_init():
+def test_finds_the_weasel():
     directory = Paths.this_directory()
     sess = tf.Session()
     imgs = tf.placeholder(tf.float32, [None, 224, 224, 3])
 
-    vgg = vgg16.vgg16(imgs, directory + '/vgg16_weights.npz', sess)
+    vgg = vgg16.vgg16(imgs, directory + '/pre_trained/vgg16_weights.npz', sess)
 
     img1 = imread(directory + '/Tests/Images/laska.png', mode='RGB')
     img1 = imresize(img1, (224, 224))

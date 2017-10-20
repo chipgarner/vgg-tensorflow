@@ -1,9 +1,9 @@
 .idea/
 output/
-vgg16_weights.npz
+pre_trained/vgg16_weights.npz
 __pycache__/
-Images/
 .cache/
-Tests/.cache/
-Tests/Images/
-
+*.jpg
+*.png
+!jet.jpg
+!laska.png
