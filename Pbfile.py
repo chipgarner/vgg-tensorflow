@@ -64,5 +64,7 @@ if __name__ == '__main__':
 
         prob = sess.run(final_op, feed_dict=feed)[0]
         preds = (np.argsort(prob)[::-1])[0:1]
-        for p in preds:
-            print(class_names[p], prob[p])
+
+        print(class_names[preds[0]], prob[preds[0]])
+
+        assert abs(prob[preds[0]] - 0.972493) < 0.000001
