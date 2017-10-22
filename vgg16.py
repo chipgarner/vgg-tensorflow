@@ -18,19 +18,23 @@ from scipy.misc import imread, imresize
 
 
 class vgg16:
-    def __init__(self, imgs, weights=None, sess=None):
+    def __init__(self, imgs, weights=None, sess=None, skip_last_layer=False):
         self.imgs = imgs
         self.images = None
+        self.probs = None
 
         self.preprocess()
 
         with tf.name_scope('VGG16'):
             self.convlayers()
-            self.fc_layers()
+            self.fc_layers(skip_last_layer)
 
-        self.probs = tf.nn.softmax(self.fc8l, name='final_tensor')
+        if not skip_last_layer:
+            self.probs = tf.nn.softmax(self.fc8l, name='final_tensor')
+
         if weights is not None and sess is not None:
-            self.load_weights_and_biases_npz(weights, sess)
+            self.load_weights_and_biases_npz(weights, sess, skip_last_layer)
+
 
     def preprocess(self):
         # zero-mean input
@@ -219,7 +223,7 @@ class vgg16:
                                     padding='SAME',
                                     name='pool4')
 
-    def fc_layers(self):
+    def fc_layers(self, skip_last_layer):
         # fc6
         with tf.name_scope('fc6') as scope:
             shape = int(np.prod(self.pool5.get_shape()[1:]))
@@ -245,19 +249,22 @@ class vgg16:
             self.parameters += [fc7w, fc7b]
 
         # fc8
-        with tf.name_scope('fc8') as scope:
-            fc8w = tf.Variable(tf.truncated_normal([4096, 1000],
-                                                   dtype=tf.float32,
-                                                   stddev=1e-1), name='weights')
-            fc8b = tf.Variable(tf.constant(1.0, shape=[1000], dtype=tf.float32),
-                               trainable=True, name='biases')
-            self.fc8l = tf.nn.bias_add(tf.matmul(self.fc7, fc8w), fc8b)
-            self.parameters += [fc8w, fc8b]
+        if not skip_last_layer:
+            with tf.name_scope('fc8') as scope:
+                fc8w = tf.Variable(tf.truncated_normal([4096, 1000],
+                                                       dtype=tf.float32,
+                                                       stddev=1e-1), name='weights')
+                fc8b = tf.Variable(tf.constant(1.0, shape=[1000], dtype=tf.float32),
+                                   trainable=True, name='biases')
+                self.fc8l = tf.nn.bias_add(tf.matmul(self.fc7, fc8w), fc8b)
+                self.parameters += [fc8w, fc8b]
 
-    def load_weights_and_biases_npz(self, weight_file, sess):
+    def load_weights_and_biases_npz(self, weight_file, sess, skip_last_layer):
         with tf.name_scope('Pre-trained'):
             weights_biases = np.load(weight_file)
             keys = sorted(weights_biases.keys())
+            if skip_last_layer:
+                keys = keys[:-2]
             for i, k in enumerate(keys):
                 print(i, k, np.shape(weights_biases[k]))
                 sess.run(self.parameters[i].assign(weights_biases[k]))
