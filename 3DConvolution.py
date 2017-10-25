@@ -5,17 +5,10 @@ import Paths
 from PIL import Image
 
 class Conv3D:
-    def __init__(self, img):
+    def __init__(self):
 
-        images = tf.stack([img, img, img, img, img, img, img, img, img])
-        images = tf.reshape(images, [1, 9, 34, 54, 1])
-        images = tf.to_float(images, "input")
-
-        assert images.get_shape() == [1, 9, 34, 54, 1]
-
-        self.inputs = images
-
-        self.out = self.build_phase1(tf.placeholder(tf.float32, [1, 9, 34, 54, 1]))
+        self.input = tf.placeholder(tf.float32, [1, 9, 34, 54, 1])
+        self.out = self.build_phase1(self.input)
 
     def build_phase1(self, inputs):
         with tf.name_scope("phase1"):
@@ -35,24 +28,26 @@ class Conv3D:
 if __name__ == '__main__':
     directory = Paths.this_directory()
 
-    # # convert('L') is gray scale
-    # img = Image.open(directory + '/Tests/Images/laska.png').convert('L')
-    # img.show()
-    # img = img.resize((34, 54))
-    # img.show()
-    # processed_image = img.getdata()
-
     img = imread(directory + '/Tests/Images/laska.png', mode='L') #L for gray scale
     img = imresize(img, (34, 54))
     image = Image.fromarray(img, 'L')
     image.show()
 
-    out = Conv3D(img)
+    images = np.stack([img, img, img, img, img, img, img, img, img])
+    images = np.reshape(images, [1, 9, 34, 54, 1])
+    images = images.astype(np.float32) #tf.to_float(images, "input")
 
-    assert out.out.shape == (1, 6)
+    assert np.shape(images) == (1, 9, 34, 54, 1)
 
     with tf.Session() as sess:
-        prob = sess.run(out.inputs)
+
+        out = Conv3D()
+        assert out.out.shape == (1, 6)
+
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
+        prob = sess.run(out.n2, feed_dict={out.input: images})[0]
 
         writer = tf.summary.FileWriter("output", sess.graph)
         writer.close()
