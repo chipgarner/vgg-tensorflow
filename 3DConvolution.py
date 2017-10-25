@@ -28,8 +28,8 @@ class Conv3D:
             c3 = tf.layers.conv3d(s2, filters=5, kernel_size=[3, 3, 3], name='C3')
             c3_flat = tf.reshape(c3, [-1, 5*3*8*1])
             n1 = tf.layers.dense(inputs=c3_flat, units=50, name='N1')
-            n2 = tf.layers.dense(n1, units=6, name='N2')
-            return n2 # logits
+            self.n2 = tf.layers.dense(n1, units=6, name='N2')
+            return self.n2 # logits
 
 
 if __name__ == '__main__':
@@ -51,11 +51,8 @@ if __name__ == '__main__':
 
     assert out.out.shape == (1, 6)
 
-    sess = tf.Session()
-    # inputs = tf.placeholder(tf.float32, [1, 9, 34, 54, 1])
+    with tf.Session() as sess:
+        prob = sess.run(out.inputs)
 
-    # prob = sess.run(out.out)[0]
-    prob = sess.run(out.out, feed_dict={out.inputs: [out.inputs]})[0]
-
-    writer = tf.summary.FileWriter("output", sess.graph)
-    writer.close()
+        writer = tf.summary.FileWriter("output", sess.graph)
+        writer.close()
